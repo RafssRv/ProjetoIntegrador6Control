@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agente de voz — roadmap</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-elev: #151b23;
+    --bg-elev-2: #1c2430;
+    --border: #2a3340;
+    --border-soft: #212a35;
+    --text: #e6e9ee;
+    --text-dim: #8b95a3;
+    --text-faint: #5a6472;
+    --accent: #4fd1c5;
+    --accent-dim: #245954;
+    --done: #6b7688;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: "Consolas", "Courier New", monospace; }
+
+  .shell {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--bg-elev);
+    border-right: 1px solid var(--border-soft);
+    padding: 28px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .brand {
+    padding: 0 8px;
+  }
+  .brand-title { font-size: 15px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .brand-sub { font-size: 12px; color: var(--text-faint); margin: 4px 0 0; }
+
+  .fase-nav { display: flex; flex-direction: column; gap: 2px; }
+  .fase-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    text-align: left;
+    width: 100%;
+    font-size: 13px;
+  }
+  .fase-item:hover { background: var(--bg-elev-2); }
+  .fase-item.active { background: var(--bg-elev-2); color: var(--text); }
+  .fase-num {
+    font-size: 11px;
+    color: var(--text-faint);
+    width: 20px;
+    flex-shrink: 0;
+  }
+  .fase-item.active .fase-num { color: var(--accent); }
+  .fase-item-label { flex: 1; }
+  .fase-item-pct { font-size: 11px; color: var(--text-faint); }
+  .fase-item.done .fase-item-pct { color: var(--accent); }
+
+  /* Main */
+  .main {
+    flex: 1;
+    padding: 40px 48px;
+    max-width: 760px;
+  }
+
+  .overview {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .overview-label { font-size: 12px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 6px; }
+  .overview-value { font-size: 28px; font-weight: 600; margin: 0; }
+  .overview-value span { font-size: 15px; color: var(--text-faint); font-weight: 400; }
+
+  .track {
+    width: 200px;
+    height: 6px;
+    background: var(--bg-elev-2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .track-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .3s ease; }
+
+  .fase-header { margin-bottom: 24px; }
+  .fase-sub { font-size: 12px; color: var(--text-faint); margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .fase-titulo { font-size: 21px; font-weight: 600; margin: 0 0 10px; letter-spacing: -0.01em; }
+  .fase-desc { font-size: 14px; color: var(--text-dim); line-height: 1.65; margin: 0; max-width: 60ch; }
+
+  .grupo { margin-bottom: 4px; }
+  .grupo-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 0 10px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .grupo-header:not(:first-child) { margin-top: 8px; }
+  .avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .grupo-nome { font-size: 13px; font-weight: 600; }
+  .grupo-count { font-size: 12px; color: var(--text-faint); margin-left: auto; }
+
+  .tarefa {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .tarefa:last-child { border-bottom: none; }
+
+  .check {
+    width: 17px;
+    height: 17px;
+    border-radius: 4px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    flex-shrink: 0;
+    margin-top: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .check.on { background: var(--accent-dim); border-color: var(--accent); }
+  .check svg { width: 11px; height: 11px; opacity: 0; }
+  .check.on svg { opacity: 1; }
+
+  .tarefa { flex-wrap: wrap; }
+  .tarefa-main { display: flex; align-items: flex-start; gap: 12px; width: 100%; }
+  .tarefa-desc { font-size: 13.5px; line-height: 1.55; color: var(--text); flex: 1; }
+  .tarefa.done .tarefa-desc { color: var(--done); text-decoration: line-through; text-decoration-color: var(--border); }
+
+  .guia-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-faint);
+    font-size: 11.5px;
+    cursor: pointer;
+    padding: 2px 0;
+    flex-shrink: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .guia-toggle:hover { color: var(--accent); }
+
+  .guia-box {
+    display: none;
+    width: 100%;
+    margin: 10px 0 4px 29px;
+    padding: 14px 16px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    white-space: pre-line;
+  }
+  .guia-box.open { display: block; }
+
+  ::selection { background: var(--accent-dim); }
+
+  @media (max-width: 720px) {
+    .shell { flex-direction: column; }
+    .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 16px; }
+    .brand { display: none; }
+    .fase-nav { flex-direction: row; }
+    .main { padding: 28px 20px; }
+    .overview { flex-direction: column; align-items: flex-start; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <p class="brand-title">Agente de voz</p>
+      <p class="brand-sub">Projeto Integrador VI · Time 10</p>
+    </div>
+    <nav class="fase-nav" id="fase-nav"></nav>
+  </aside>
+
+  <main class="main">
+    <div class="overview">
+      <div>
+        <p class="overview-label">Progresso geral</p>
+        <p class="overview-value mono" id="overview-value">0<span> / 0 tarefas</span></p>
+      </div>
+      <div class="track"><div class="track-fill" id="track-fill" style="width:0%"></div></div>
+    </div>
+
+    <div id="content">Carregando...</div>
+  </main>
+</div>
+
+<script>
+let tarefas = [];
+let fases = [];
+let faseAtiva = null;
+
+const ICON_CHECK = '<svg viewBox="0 0 12 12" fill="none"><path d="M2.5 6.5L4.8 8.8L9.5 3.5" stroke="#0d1117" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+async function carregar() {
+  const res = await fetch("/api/tarefas");
+  tarefas = await res.json();
+  const vistos = new Set();
+  fases = [];
+  tarefas.forEach(t => {
+    if (!vistos.has(t.fase)) {
+      vistos.add(t.fase);
+      fases.push({ fase: t.fase, label: t.fase_label, sub: t.fase_sub, titulo: t.fase_titulo, desc: t.fase_desc });
+    }
+  });
+  fases.sort((a, b) => a.fase - b.fase);
+  if (faseAtiva === null) faseAtiva = fases[0].fase;
+  render();
+}
+
+function iniciais(nome) {
+  return nome.split(" ").map(p => p[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function renderNav() {
+  const nav = document.getElementById("fase-nav");
+  nav.innerHTML = "";
+  fases.forEach(f => {
+    const itens = tarefas.filter(t => t.fase === f.fase);
+    const concluidas = itens.filter(t => t.concluida).length;
+    const pct = itens.length ? Math.round((concluidas / itens.length) * 100) : 0;
+    const btn = document.createElement("button");
+    btn.className = "fase-item" + (f.fase === faseAtiva ? " active" : "") + (pct === 100 ? " done" : "");
+    btn.innerHTML = `
+      <span class="fase-num mono">${String(f.fase).padStart(2, "0")}</span>
+      <span class="fase-item-label">${f.label}</span>
+      <span class="fase-item-pct mono">${pct}%</span>
+    `;
+    btn.onclick = () => { faseAtiva = f.fase; render(); };
+    nav.appendChild(btn);
+  });
+}
+
+function renderOverview() {
+  const total = tarefas.length;
+  const concluidas = tarefas.filter(t => t.concluida).length;
+  document.getElementById("overview-value").innerHTML = `${concluidas}<span> / ${total} tarefas</span>`;
+  const pct = total ? (concluidas / total) * 100 : 0;
+  document.getElementById("track-fill").style.width = pct + "%";
+}
+
+function render() {
+  renderNav();
+  renderOverview();
+
+  const f = fases.find(x => x.fase === faseAtiva);
+  const itens = tarefas.filter(t => t.fase === faseAtiva);
+
+  const porPessoa = {};
+  itens.forEach(t => {
+    if (!porPessoa[t.pessoa]) porPessoa[t.pessoa] = [];
+    porPessoa[t.pessoa].push(t);
+  });
+
+  const content = document.getElementById("content");
+  content.innerHTML = `
+    <div class="fase-header">
+      <p class="fase-sub">${f.sub}</p>
+      <h1 class="fase-titulo">${f.titulo}</h1>
+      <p class="fase-desc">${f.desc}</p>
+    </div>
+    <div id="grupos"></div>
+  `;
+
+  const grupos = document.getElementById("grupos");
+  Object.entries(porPessoa).forEach(([pessoa, lista]) => {
+    const concluidas = lista.filter(t => t.concluida).length;
+    const grupo = document.createElement("div");
+    grupo.className = "grupo";
+    grupo.innerHTML = `
+      <div class="grupo-header">
+        <span class="avatar">${iniciais(pessoa)}</span>
+        <span class="grupo-nome">${pessoa}</span>
+        <span class="grupo-count mono">${concluidas}/${lista.length}</span>
+      </div>
+    `;
+    lista.forEach(t => {
+      const row = document.createElement("div");
+      row.className = "tarefa" + (t.concluida ? " done" : "");
+
+      const temGuia = t.guia && t.guia.trim().length > 0;
+      row.innerHTML = `
+        <div class="tarefa-main">
+          <button class="check ${t.concluida ? "on" : ""}" aria-label="Marcar tarefa">${ICON_CHECK}</button>
+          <span class="tarefa-desc">${t.descricao}</span>
+          ${temGuia ? '<button class="guia-toggle">ver guia</button>' : ''}
+        </div>
+        ${temGuia ? `<div class="guia-box">${t.guia.trim()}</div>` : ''}
+      `;
+      row.querySelector(".check").addEventListener("click", async () => {
+        const novoEstado = !t.concluida;
+        await fetch(`/api/tarefas/${t.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ concluida: novoEstado })
+        });
+        t.concluida = novoEstado;
+        render();
+      });
+      if (temGuia) {
+        const toggle = row.querySelector(".guia-toggle");
+        const box = row.querySelector(".guia-box");
+        toggle.addEventListener("click", () => {
+          const aberto = box.classList.toggle("open");
+          toggle.textContent = aberto ? "ocultar guia" : "ver guia";
+        });
+      }
+      grupo.appendChild(row);
+    });
+    grupos.appendChild(grupo);
+  });
+}
+
+carregar();
+</script>
+</body>
+</html>
